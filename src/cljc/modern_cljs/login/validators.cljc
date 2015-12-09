@@ -9,7 +9,7 @@
             [:email present? "Email can't be empty."]
             [:email email-address? "The provided email is invalid."]
             [:password present? "Password can't be empty."]
-            [:password (matches *re-password*) "The provided password is invalid"]))
+            [:password (matches *re-password*) "The provided password is invalid."]))
 
 #? (:clj (defn email-domain-errors [email]
            (validate {:email email}

@@ -29,7 +29,7 @@
          '[pandeiro.boot-http :refer [serve]]
          '[adzerk.boot-reload :refer [reload]]
          '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
-         '[adzerk.boot-test :refer :all]
+         '[adzerk.boot-test :refer [test]]
          '[crisptrutski.boot-cljs-test :refer [test-cljs]])
 
 ;;; testing task: add test/cljc to source-paths for CLJ/CLJS testing porpouse
@@ -54,10 +54,12 @@
   browser needs to map locations in the compiled JavaScript to the corresponding
   locations in the original ClojureScript source files."
 
-  [p port          PORT  int  "The port to listen on. (Default: 3000)"
-   O optimizations LEVEL kw   "The optimization level"
-   s source-map          bool "Create source maps for compiled JS."]
+  [p port          PORT      int      "The port to listen on. (Default: 3000)"
+   O optimizations LEVEL     kw       "The optimization level"
+   s source-map              bool     "Create source maps for compiled JS."
+   n namespaces    NAMESPACE #{sym}  "The set of namespace symbols to run tests in."]
   (comp
+   (testing)
    (if port 
      (serve :port port 
             :dir "target"                                
@@ -69,6 +71,7 @@
             :resource-root "target"
             :reload true))
    (watch)
+   (test :namespaces namespaces)
    (reload)
    (cljs-repl)
    (if optimizations
