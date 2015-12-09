@@ -21,12 +21,16 @@
                  [javax.servlet/servlet-api "2.5"]
                  [org.clojars.magomimmo/valip "0.4.0-SNAPSHOT"]
                  [enlive "1.1.6"]
+                 [adzerk/boot-test "1.0.6"]
+                 [crisptrutski/boot-cljs-test "0.2.1-SNAPSHOT"]
                  ])
 
 (require '[adzerk.boot-cljs :refer [cljs]]
          '[pandeiro.boot-http :refer [serve]]
          '[adzerk.boot-reload :refer [reload]]
-         '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]])
+         '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
+         '[adzerk.boot-test :refer :all]
+         '[crisptrutski.boot-cljs-test :refer [test-cljs]])
 
 ;;; testing task: add test/cljc to source-paths for CLJ/CLJS testing porpouse
 (deftask testing
@@ -53,20 +57,22 @@
   [p port          PORT  int  "The port to listen on. (Default: 3000)"
    O optimizations LEVEL kw   "The optimization level"
    s source-map          bool "Create source maps for compiled JS."]
-  (let [port (or port 3000)             ;; default 3000
-        level (or optimizations :none)  ;; defalut none
-        sm (if (= level :none)          ;; with none source-map is always true
-             true
-             source-map)]
-    (comp
+  (comp
+   (if port 
      (serve :port port 
             :dir "target"                                
-            :handler 'modern-cljs.core/app ;; ring hanlder
-            :resource-root "target"        ;; root classpath
-            :reload true)                  ;; reload ns
-     (watch)
-     (reload)
-     (cljs-repl) ;; before cljs
-     (if sm
-       (cljs :source-map sm :optimizations level)
-       (cljs :optimizations level)))))
+            :handler 'modern-cljs.core/app
+            :resource-root "target"
+            :reload true)
+     (serve :dir "target"                                
+            :handler 'modern-cljs.core/app
+            :resource-root "target"
+            :reload true))
+   (watch)
+   (reload)
+   (cljs-repl)
+   (if optimizations
+     (if source-map
+       (cljs :source-map source-map :optimizations optimizations)
+       (cljs :optimizations optimizations))
+     (cljs))))
