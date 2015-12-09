@@ -28,16 +28,45 @@
          '[adzerk.boot-reload :refer [reload]]
          '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]])
 
+;;; testing task: add test/cljc to source-paths for CLJ/CLJS testing porpouse
+(deftask testing
+  "Add test/cljc for CLJ/CLJS testing purpouse"
+  []
+  (set-env! :source-paths #(conj % "test/cljc"))
+  identity)
+
 ;;; add dev task
 (deftask dev 
-  "Launch immediate feedback dev environment"
-  []
-  (comp
-   (serve :dir "target"                                
-          :handler 'modern-cljs.core/app               ;; ring hanlder
-          :resource-root "target"                      ;; root classpath
-          :reload true)                                ;; reload ns
-   (watch)
-   (reload)
-   (cljs-repl) ;; before cljs
-   (cljs)))
+  "Launch immediate feedback dev environment
+   
+   Available --optimizations levels (default 'none'):
+   
+  * none         No optimizations. Bypass the Closure compiler completely.
+  * whitespace   Remove comments, unnecessary whitespace, and punctuation.
+  * simple       Whitespace + local variable and function parameter renaming.
+  * advanced     Simple + aggressive renaming, inlining, dead code elimination.
+
+  Source maps can be enabled via the --source-map flag. This provides what the
+  browser needs to map locations in the compiled JavaScript to the corresponding
+  locations in the original ClojureScript source files."
+
+  [p port          PORT  int  "The port to listen on. (Default: 3000)"
+   O optimizations LEVEL kw   "The optimization level"
+   s source-map          bool "Create source maps for compiled JS."]
+  (let [port (or port 3000)             ;; default 3000
+        level (or optimizations :none)  ;; defalut none
+        sm (if (= level :none)          ;; with none source-map is always true
+             true
+             source-map)]
+    (comp
+     (serve :port port 
+            :dir "target"                                
+            :handler 'modern-cljs.core/app ;; ring hanlder
+            :resource-root "target"        ;; root classpath
+            :reload true)                  ;; reload ns
+     (watch)
+     (reload)
+     (cljs-repl) ;; before cljs
+     (if sm
+       (cljs :source-map sm :optimizations level)
+       (cljs :optimizations level)))))
