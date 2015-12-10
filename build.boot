@@ -39,40 +39,32 @@
   (set-env! :source-paths #(conj % "test/cljc"))
   identity)
 
-;;; add dev task
-(deftask dev 
-  "Launch immediate feedback dev environment
-   
-   Available --optimizations levels (default 'none'):
-   
-  * none         No optimizations. Bypass the Closure compiler completely.
-  * whitespace   Remove comments, unnecessary whitespace, and punctuation.
-  * simple       Whitespace + local variable and function parameter renaming.
-  * advanced     Simple + aggressive renaming, inlining, dead code elimination.
-
-  Source maps can be enabled via the --source-map flag. This provides what the
-  browser needs to map locations in the compiled JavaScript to the corresponding
-  locations in the original ClojureScript source files."
-
-  [p port          PORT      int      "The port to listen on. (Default: 3000)"
-   O optimizations LEVEL     kw       "The optimization level"
-   s source-map              bool     "Create source maps for compiled JS."]
+(deftask tdd 
+  "Launch a TDD Environment"
+  []
   (comp
-   (if port 
-     (serve :port port 
-            :dir "target"                                
-            :handler 'modern-cljs.core/app
-            :resource-root "target"
-            :reload true)
-     (serve :dir "target"                                
-            :handler 'modern-cljs.core/app
-            :resource-root "target"
-            :reload true))
+   (serve :dir "target"                                
+          :handler 'modern-cljs.core/app
+          :resource-root "target"
+          :reload true)
+   (testing)
    (watch)
    (reload)
    (cljs-repl)
-   (if optimizations
-     (if source-map
-       (cljs :source-map source-map :optimizations optimizations)
-       (cljs :optimizations optimizations))
-     (cljs))))
+   (test-cljs :out-file "main.js" 
+              :js-env :phantom 
+              :namespaces #{'modern-cljs.shopping.validators-test})
+   (test :namespaces #{'modern-cljs.shopping.validators-test})))
+
+;;; add dev task
+(deftask dev 
+  []
+  (comp
+   (serve :dir "target"                                
+            :handler 'modern-cljs.core/app
+            :resource-root "target"
+            :reload true)
+   (watch)
+   (reload)
+   (cljs-repl)
+   (cljs)))
