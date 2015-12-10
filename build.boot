@@ -56,10 +56,8 @@
 
   [p port          PORT      int      "The port to listen on. (Default: 3000)"
    O optimizations LEVEL     kw       "The optimization level"
-   s source-map              bool     "Create source maps for compiled JS."
-   n namespaces    NAMESPACE #{sym}  "The set of namespace symbols to run tests in."]
+   s source-map              bool     "Create source maps for compiled JS."]
   (comp
-   (testing)
    (if port 
      (serve :port port 
             :dir "target"                                
@@ -71,7 +69,6 @@
             :resource-root "target"
             :reload true))
    (watch)
-   (test :namespaces namespaces)
    (reload)
    (cljs-repl)
    (if optimizations

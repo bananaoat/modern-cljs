@@ -7,5 +7,5 @@
           (boolean (user-credential-errors email password)))
     (str "Please complete the form")
     (str email " and " password
-         " passed the formal validation, but you still have to be authenticated")))
+         " passed the formal validation, but you still have to be authenticated.")))
 
